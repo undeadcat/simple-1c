@@ -9,3 +9,5 @@ packages/
 *.nupkg
 *.designer.cs
 *.Designer.cs
+*.orig
+*.rej
