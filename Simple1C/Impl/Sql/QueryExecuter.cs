@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
+using Npgsql;
 using Simple1C.Impl.Sql.SchemaMapping;
 using Simple1C.Impl.Sql.SqlAccess;
 using Simple1C.Impl.Sql.Translation;
@@ -58,7 +59,7 @@ namespace Simple1C.Impl.Sql
                             {
                                 using (var reader = c.ExecuteReader())
                                 {
-                                    w.EnsureTable(reader);
+                                    w.EnsureTable(PostgreeSqlDatabase.GetColumns((NpgsqlDataReader) reader));
                                     while (reader.Read())
                                     {
                                         if (errorOccured)

@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Text;
 using Irony.Parsing;
 using Simple1C.Impl.Sql.SqlAccess.Syntax;
@@ -28,32 +27,16 @@ namespace Simple1C.Impl.Sql.SqlAccess.Parsing
         {
             var parseTree = parser.Parse(source);
             if (parseTree.Status != ParseTreeStatus.Parsed)
-                throw new InvalidOperationException(FormatErrors(parseTree, parser.Context.TabWidth));
+                throw new ParseException(parseTree.ParserMessages,
+                    ToTabs(parseTree.SourceText, parser.Context.TabWidth));
             var result = (SqlQuery) parseTree.Root.AstNode;
             new ColumnReferenceTableNameResolver().Visit(result);
             return result;
         }
 
-        private static string FormatErrors(ParseTree parseTree, int tabWidth)
+        private static string ToTabs(string s, int tabSize)
         {
-            var b = new StringBuilder();
-            foreach (var message in parseTree.ParserMessages)
-            {
-                b.AppendLine(string.Format("{0}: {1} at {2} in state {3}", message.Level, message.Message,
-                    message.Location, message.ParserState));
-
-                var theMessage = message;
-                var lines = parseTree.SourceText.Replace("\t", new string(' ', tabWidth))
-                    .Split(new[] {"\r\n"}, StringSplitOptions.None)
-                    .Select((sourceLine, index) =>
-                        index == theMessage.Location.Line
-                            ? string.Format("{0}\r\n{1}|<-Here", sourceLine,
-                                new string('_', theMessage.Location.Column))
-                            : sourceLine);
-                foreach (var line in lines)
-                    b.AppendLine(line);
-            }
-            return string.Format("parse errors\r\n:{0}", b);
+            return s.Replace("\t", new string(' ', tabSize));
         }
     }
 }

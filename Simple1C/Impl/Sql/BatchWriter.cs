@@ -4,7 +4,6 @@ using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
-using Npgsql;
 using Simple1C.Impl.Helpers;
 using Simple1C.Impl.Sql.SqlAccess;
 
@@ -30,12 +29,10 @@ namespace Simple1C.Impl.Sql
             this.historyMode = historyMode;
         }
 
-        public void EnsureTable(DbDataReader dbReader)
+        public void EnsureTable(DataColumn[] readerColumns)
         {
-            var reader = (NpgsqlDataReader) dbReader;
             lock (lockObject)
             {
-                var readerColumns = PostgreeSqlDatabase.GetColumns(reader);
                 if (columns != null)
                 {
                     CheckColumns(columns, "original", readerColumns, "current");
@@ -63,7 +60,6 @@ namespace Simple1C.Impl.Sql
 
         public void InsertRow(DbDataReader dbReader)
         {
-            var reader = (NpgsqlDataReader) dbReader;
             lock (lockObject)
             {
                 var currentRowIndex = filledRowsCount;
@@ -72,7 +68,7 @@ namespace Simple1C.Impl.Sql
                     rowData = rows[currentRowIndex];
                 else
                     rows.Add(rowData = new object[columns.Length]);
-                reader.GetValues(rowData);
+                dbReader.GetValues(rowData);
                 filledRowsCount++;
                 if (filledRowsCount == batchSize)
                     Flush();
