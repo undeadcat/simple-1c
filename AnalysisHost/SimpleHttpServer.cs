@@ -38,7 +38,7 @@ namespace Simple1C.AnalysisHost
             httpListener.Stop();
         }
 
-        public void RegisterHandler(string prefix, Action<SimpleContext> handler)
+        public void Handler(string prefix, Action<SimpleContext> handler)
         {
             handlers.Add(Tuple.Create(prefix, handler));
         }

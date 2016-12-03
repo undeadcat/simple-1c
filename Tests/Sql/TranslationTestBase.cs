@@ -70,6 +70,11 @@ namespace Simple1C.Tests.Sql
             {
                 return mappings.GetOrDefault(queryName);
             }
+
+            public List<string> ListTables()
+            {
+                return mappings.Select(c => c.Key).ToList();
+            }
         }
     }
 }

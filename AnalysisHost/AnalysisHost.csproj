@@ -38,9 +38,6 @@
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="Simple1C, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\bin\Simple1C.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -49,13 +46,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Contracts\QueryResult.cs" />
+    <Compile Include="Contracts\Contracts.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SimpleHttpServer.cs" />
+    <Compile Include="SimpleHttpServerExtensions.cs" />
     <Compile Include="StreamExtenstions.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Simple1C\Simple1C.csproj">
+      <Project>{BB1A4406-AD17-4089-9D6B-33D4452FDE4C}</Project>
+      <Name>Simple1C</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Simple1C\Simple1C.csproj">
       <Project>{BB1A4406-AD17-4089-9D6B-33D4452FDE4C}</Project>
       <Name>Simple1C</Name>

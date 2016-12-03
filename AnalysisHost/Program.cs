@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using Newtonsoft.Json;
-using Npgsql;
 using Simple1C.AnalysisHost.Contracts;
 using Simple1C.Impl.Helpers;
 using Simple1C.Impl.Sql.SchemaMapping;
@@ -25,12 +22,26 @@ namespace Simple1C.AnalysisHost
             if (parameters["debug"] != null)
                 Debugger.Launch();
             var server = new SimpleHttpServer(port);
-            server.RegisterHandler("translate", JsonHandler<TranslationRequest, TranslationResult>(Translate));
-            server.RegisterHandler("testConnection", JsonHandler<string>(TestConnection));
-            server.RegisterHandler("executeQuery", JsonHandler<ExecuteQueryRequest, QueryResult>(ExecuteQuery));
+            server.JsonHandler<TranslationRequest, TranslationResult>("translate", Translate);
+            server.JsonHandler<string>("testConnection", TestConnection);
+            server.JsonHandler<ExecuteQueryRequest, QueryResult>("executeQuery", ExecuteQuery);
+            server.JsonHandler<DbRequest, List<string>>("listTables", ListTables);
+            server.JsonHandler<SchemaRequest, TableMappingDto>("tableMapping", GetTable);
             server.Start();
         }
 
+        private static List<string> ListTables(DbRequest arg)
+        {
+            return SchemaStore(arg.ConnectionString).ListTables();
+        }
+
+        private static TableMappingDto GetTable(SchemaRequest arg)
+        {
+            var table = SchemaStore(arg.ConnectionString).ResolveTableOrNull(arg.TableName);
+            if (table == null)
+                throw new InvalidOperationException(string.Format("Could not resolve table by name {0}", arg.TableName));
+            return ConvertTable(table);
+        }
 
         private static void TestConnection(string connectionString)
         {
@@ -44,18 +55,14 @@ namespace Simple1C.AnalysisHost
             {
                 return new TranslationResult
                 {
-                    Query = queryTranslator.Translate(arg.Query)
+                    Result = queryTranslator.Translate(arg.Query)
                 };
             }
             catch (ParseException e)
             {
                 return new TranslationResult
                 {
-                    Messages = e.Errors.Select(m => new TranslationResult.ErrorMessage
-                    {
-                        Message = m.Message,
-                        Offset = 0
-                    }).ToList()
+                    Error = e.Message
                 };
             }
         }
@@ -67,7 +74,7 @@ namespace Simple1C.AnalysisHost
             return db.ExecuteWithResult(arg.Query, new object[0], command =>
             {
                 var reader = command.ExecuteReader();
-                var columns = PostgreeSqlDatabase.GetColumns((NpgsqlDataReader) reader);
+                var columns = PostgreeSqlDatabase.GetColumns(reader);
                 while (reader.Read())
                 {
                     var row = new object[columns.Length];
@@ -87,28 +94,6 @@ namespace Simple1C.AnalysisHost
             });
         }
 
-        private static Action<SimpleHttpServer.SimpleContext> JsonHandler<TInput>(Action<TInput> handler)
-        {
-            return JsonHandler<TInput, object>(input =>
-            {
-                handler(input);
-                return null;
-            });
-        }
-
-        private static Action<SimpleHttpServer.SimpleContext> JsonHandler<TInput, TResult>(Func<TInput, TResult> handler)
-        {
-            return context =>
-            {
-                var input = JsonConvert.DeserializeObject<TInput>(Encoding.UTF8.GetString(context.Request.Body));
-                Console.WriteLine(JsonConvert.SerializeObject(input));
-                var result = handler(input);
-
-                Console.WriteLine(JsonConvert.SerializeObject(result));
-                context.Response.Body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(result));
-            };
-        }
-
         private static QueryToSqlTranslator Translator(string connectionString)
         {
             return new QueryToSqlTranslator(SchemaStore(connectionString), new int[0]);
@@ -122,6 +107,24 @@ namespace Simple1C.AnalysisHost
         private static PostgreeSqlDatabase Db(string connectionString)
         {
             return new PostgreeSqlDatabase(connectionString);
+        }
+
+        private static TableMappingDto ConvertTable(TableMapping mapping)
+        {
+            return new TableMappingDto
+            {
+                Name = mapping.QueryTableName,
+                Type = mapping.Type,
+                Properties = mapping.Properties
+                    .Select(t => new PropertyMappingDto
+                    {
+                        Name = t.PropertyName,
+                        Tables = t.SingleLayout != null
+                            ? new[] {t.SingleLayout.NestedTableName}
+                            : t.UnionLayout.NestedTables
+                    })
+                    .ToArray()
+            };
         }
     }
 }

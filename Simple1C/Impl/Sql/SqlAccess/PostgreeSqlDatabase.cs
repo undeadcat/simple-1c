@@ -14,12 +14,12 @@ namespace Simple1C.Impl.Sql.SqlAccess
         {
         }
 
-        public static DataColumn[] GetColumns(NpgsqlDataReader reader)
+        public static DataColumn[] GetColumns(DbDataReader reader)
         {
             //reader.GetColumnSchema() на алиасы колонок в запросе забивает почему-то
             //reader.GetSchemaTable() какую-то хрень в ColumnSize возвращает
 
-            var npgsqlColumns = reader.GetColumnSchema();
+            var npgsqlColumns = ((NpgsqlDataReader) reader).GetColumnSchema();
             var result = new DataColumn[npgsqlColumns.Count];
             for (var i = 0; i < result.Length; i++)
             {

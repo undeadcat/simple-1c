@@ -118,6 +118,14 @@ namespace Simple1C.Impl.Sql.SchemaMapping
             return result;
         }
 
+        public List<string> ListTables()
+        {
+            var sql = "select queryTableName from simple1c.tableMappings";
+            return database.ExecuteEnumerable(sql, new object[0],
+                    reader => reader.GetString(0))
+                .ToList();
+        }
+
         private TableMapping LoadMappingOrNull(string queryName)
         {
             const string sql = "select queryTableName,dbName,type,properties " +
@@ -130,7 +138,7 @@ namespace Simple1C.Impl.Sql.SchemaMapping
                     r.GetString(1),
                     TableMapping.ParseTableType(r.GetString(2)),
                     r.GetString(3)
-                        .Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries)
+                        .SplitLines()
                         .Select(PropertyMapping.Parse).ToArray()))
                 .SingleOrDefault();
         }

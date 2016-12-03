@@ -5,6 +5,11 @@ namespace Simple1C.Impl.Helpers
 {
     internal static class StringHelpers
     {
+        public static string[] SplitLines(this string s)
+        {
+            return s.Split(new[] {"\r\n", "\n"}, StringSplitOptions.RemoveEmptyEntries);
+        }
+
         public static bool EqualsIgnoringCase(this string s1, string s2)
         {
             return string.Equals(s1, s2, StringComparison.OrdinalIgnoreCase);
@@ -17,7 +22,7 @@ namespace Simple1C.Impl.Helpers
 
         public static IEnumerable<T> ParseLinesWithTabs<T>(string source, Func<string, List<string>, T> func)
         {
-            var lines = source.Split(new[] {"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+            var lines = source.SplitLines();
             var items = new List<string>();
             string headerLine = null;
             foreach (var s in lines)
