@@ -39,7 +39,7 @@ namespace Simple1C.AnalysisHost
         {
             var table = SchemaStore(arg.ConnectionString).ResolveTableOrNull(arg.TableName);
             if (table == null)
-                throw new InvalidOperationException(string.Format("Could not resolve table by name {0}", arg.TableName));
+                return null;
             return ConvertTable(table);
         }
 
