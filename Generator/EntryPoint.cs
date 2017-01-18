@@ -1,9 +1,13 @@
 ﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CSharp;
+using Simple1C;
 using Simple1C.Impl;
 using Simple1C.Impl.Generation;
 using Simple1C.Impl.Helpers;
@@ -12,6 +16,7 @@ using Simple1C.Impl.Sql.SchemaMapping;
 using Simple1C.Impl.Sql.SqlAccess;
 using Simple1C.Impl.Sql.Translation;
 using Simple1C.Interface;
+using Simple1C.Interface.Sql;
 
 namespace Generator
 {
@@ -149,22 +154,38 @@ namespace Generator
                 ? StringHelpers.ParseLinesWithTabs(File.ReadAllText(connectionStringsFile),
                     (s, items) => new QuerySource
                     {
-                        db = new PostgreeSqlDatabase(s),
-                        areas = items.Select(int.Parse).ToArray()
-                    })
+                        ConnectionString = s,
+                        Areas = items.Select(int.Parse).ToArray()
+                    }).ToArray()
                 : connectionStrings.Split(',')
                     .Select(x => new QuerySource
                     {
-                        db = new PostgreeSqlDatabase(x),
-                        areas = new int[0]
-                    });
+                        ConnectionString = x,
+                        Areas = new int[0]
+                    }).ToArray();
             var target = new MsSqlDatabase(resultConnectionString);
             var queryText = File.ReadAllText(queryFile);
             var targetTableName = Path.GetFileNameWithoutExtension(queryFile);
-            var sqlExecuter = new QueryExecuter(querySources.ToArray(), target, queryText,
-                targetTableName, dumpSql == "true", historyMode == "true");
-            var succeeded = sqlExecuter.Execute();
-            return succeeded ? 0 : -1;
+            var stopwatch = Stopwatch.StartNew();
+            try
+            {
+                var writer = new MsSqlBulkCopyWriter(target, targetTableName, historyMode == "true", 1024);
+                var parallelOptions = new ParallelOptions
+                {
+                    CancellationToken = CancellationToken.None,
+                    MaxDegreeOfParallelism = querySources.Length
+                };
+                Sql.Execute(querySources, queryText, writer, parallelOptions, dumpSql == "true");
+                stopwatch.Stop();
+                Console.Out.WriteLine("\r\ndone, [{0}] millis", stopwatch.ElapsedMilliseconds);
+                return 0;
+            }
+            catch (Exception e)
+            {
+                Console.Out.WriteLine("\r\ndone, [{0}] millis", stopwatch.ElapsedMilliseconds);
+                Console.Out.WriteLine("error [{0}]", e);
+                return -1;
+            }
         }
 
         private static int TranslateSql(NameValueCollection parameters)
@@ -214,7 +235,7 @@ namespace Generator
             return 0;
         }
 
-        public static string GetTemporaryDirectoryFullPath()
+        private static string GetTemporaryDirectoryFullPath()
         {
             var result = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             Directory.CreateDirectory(result);

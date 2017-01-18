@@ -32,7 +32,7 @@ namespace Simple1C.Impl.Sql.SqlAccess.Parsing
             LanguageFlags = LanguageFlags.CreateAst;
             NonGrammarTerminals.Add(new CommentTerminal("sql_style_comment", "/*", "*/"));
             NonGrammarTerminals.Add(new CommentTerminal("sql_style_line_comment", "--", "\n", "\r\n"));
-            NonGrammarTerminals.Add(new CommentTerminal("1c_commene", "//", "\n", "\r\n"));
+            NonGrammarTerminals.Add(new CommentTerminal("1c_comment", "//", "\n", "\r\n"));
 
             not = Transient("not", ToTerm("NOT") | "НЕ");
             by = NonTerminal("by", ToTerm("by") | "ПО", TermFlags.NoAstNode);

@@ -2,11 +2,17 @@
 <module type="RIDER_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$/../..">
+<<<<<<< HEAD
       <sourceFolder url="file://$MODULE_DIR$/../../AnalysisHost" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../Generator" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../Simple1C" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../Tests" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/../../AnalysisHost/obj" />
+=======
+      <sourceFolder url="file://$MODULE_DIR$/../../Generator" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../Simple1C" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../Tests" isTestSource="false" />
+>>>>>>> master
       <excludeFolder url="file://$MODULE_DIR$/../../Generator/obj" />
       <excludeFolder url="file://$MODULE_DIR$/../../Simple1C/obj" />
       <excludeFolder url="file://$MODULE_DIR$/../../Tests/obj" />

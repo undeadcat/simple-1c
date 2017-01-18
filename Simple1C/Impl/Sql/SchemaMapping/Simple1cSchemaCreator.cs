@@ -61,6 +61,7 @@ DECLARE
 	guid_text varchar(50);
 BEGIN
 	guid_text := replace(cast($1 as varchar(50)), '\\x', '');
+	guid_text := replace(guid_text, '\x', '');
 	guid_text := substring(guid_text from 25 for 8) || '-' ||
 				substring(guid_text from 21 for 4) || '-' ||
 				substring(guid_text from 17 for 4) || '-' ||
@@ -233,7 +234,10 @@ $$;";
                     }, StringComparer.OrdinalIgnoreCase)
                 .Select(x =>
                 {
-                    var propertyTypes = propertyDescriptors.GetOrDefault(x.queryName);
+                    var propertyName = x.queryName.ExcludeSuffix("Кт").ExcludeSuffix("Дт");
+                    var propertyTypes = propertyName == "Счет"
+                        ? new[] {"ПланСчетов.Хозрасчетный"}
+                        : propertyDescriptors.GetOrDefault(propertyName);
                     if (propertyTypes == null || propertyTypes.Length == 1)
                     {
                         if (x.columns.Length != 1)
@@ -242,11 +246,17 @@ $$;";
                         var singleLayout = new SingleLayout(x.columns[0], nestedTableName);
                         return new PropertyMapping(x.queryName, singleLayout, null);
                     }
-                    var unionLayout = new UnionLayout(
-                        GetColumnBySuffixOrNull("_type", x.columns),
-                        GetColumnBySuffixOrNull("_rtref", x.columns),
-                        GetColumnBySuffixOrNull("_rrref", x.columns),
-                        propertyTypes);
+                    var unionLayout = x.queryName == "Регистратор"
+                        ? new UnionLayout(
+                            null,
+                            GetColumnBySuffixOrNull("_RecorderTRef", x.columns),
+                            GetColumnBySuffixOrNull("_RecorderRRef", x.columns),
+                            propertyTypes)
+                        : new UnionLayout(
+                            GetColumnBySuffixOrNull("_type", x.columns),
+                            GetColumnBySuffixOrNull("_rtref", x.columns),
+                            GetColumnBySuffixOrNull("_rrref", x.columns),
+                            propertyTypes);
                     return new PropertyMapping(x.queryName, null, unionLayout);
                 })
                 .NotNull()

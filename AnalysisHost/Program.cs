@@ -8,6 +8,7 @@ using Simple1C.Impl.Sql.SchemaMapping;
 using Simple1C.Impl.Sql.SqlAccess;
 using Simple1C.Impl.Sql.SqlAccess.Parsing;
 using Simple1C.Impl.Sql.Translation;
+using Npgsql;
 
 namespace Simple1C.AnalysisHost
 {
@@ -74,7 +75,7 @@ namespace Simple1C.AnalysisHost
             return db.ExecuteWithResult(arg.Query, new object[0], command =>
             {
                 var reader = command.ExecuteReader();
-                var columns = PostgreeSqlDatabase.GetColumns(reader);
+                var columns = DatabaseHelpers.GetColumns((NpgsqlDataReader)reader);
                 while (reader.Read())
                 {
                     var row = new object[columns.Length];
