@@ -6,5 +6,6 @@ namespace Simple1C.Impl.Sql.SchemaMapping
     {
         TableMapping ResolveTableOrNull(string queryName);
         List<string> ListTables();
+        List<EnumMapping> ListEnums();
     }
 }

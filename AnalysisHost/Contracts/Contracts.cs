@@ -49,6 +49,12 @@ namespace Simple1C.AnalysisHost.Contracts
         public PropertyMappingDto[] Properties { get; set; }
     }
 
+    internal class EnumDto
+    {
+        public string EnumName { get; set; }
+        public string ValueName { get; set; }
+    }
+
     internal class PropertyMappingDto
     {
         public string Name { get; set; }

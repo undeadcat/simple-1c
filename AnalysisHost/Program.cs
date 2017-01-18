@@ -21,32 +21,37 @@ namespace Simple1C.AnalysisHost
             var parameters = NameValueCollectionHelpers.ParseCommandLine(args);
             var port = int.Parse(parameters.Get("port"));
             if (parameters["debug"] != null)
+            {
+                Console.WriteLine("Waiting for debugger");
                 Debugger.Launch();
+            }
+            Console.WriteLine("Started listener on port {0}", port);
             var server = new SimpleHttpServer(port);
             server.JsonHandler<TranslationRequest, TranslationResult>("translate", Translate);
-            server.JsonHandler<string>("testConnection", TestConnection);
             server.JsonHandler<ExecuteQueryRequest, QueryResult>("executeQuery", ExecuteQuery);
-            server.JsonHandler<DbRequest, List<string>>("listTables", ListTables);
-            server.JsonHandler<SchemaRequest, TableMappingDto>("tableMapping", GetTable);
+
+            server.JsonHandler<string>("testConnection",
+                connectionString => Db(connectionString).ExecuteInt("select 1"));
+
+            server.JsonHandler<DbRequest, List<string>>("listTables",
+                request => SchemaStore(request.ConnectionString).ListTables());
+
+            server.JsonHandler<DbRequest, List<EnumDto>>("listEnums",
+                request => SchemaStore(request.ConnectionString)
+                .ListEnums()
+                .Select(x => new EnumDto {EnumName = x.enumName, ValueName = x.enumValueName})
+                .ToList());
+
+            server.JsonHandler<SchemaRequest, TableMappingDto>("tableMapping",
+                request =>
+                {
+                    var table = SchemaStore(request.ConnectionString).ResolveTableOrNull(request.TableName);
+                    if (table == null)
+                        return null;
+                    return ConvertTable(table);
+                });
+
             server.Start();
-        }
-
-        private static List<string> ListTables(DbRequest arg)
-        {
-            return SchemaStore(arg.ConnectionString).ListTables();
-        }
-
-        private static TableMappingDto GetTable(SchemaRequest arg)
-        {
-            var table = SchemaStore(arg.ConnectionString).ResolveTableOrNull(arg.TableName);
-            if (table == null)
-                return null;
-            return ConvertTable(table);
-        }
-
-        private static void TestConnection(string connectionString)
-        {
-            Db(connectionString).ExecuteInt("select 1");
         }
 
         private static TranslationResult Translate(TranslationRequest arg)

@@ -126,6 +126,20 @@ namespace Simple1C.Impl.Sql.SchemaMapping
                 .ToList();
         }
 
+        public List<EnumMapping> ListEnums()
+        {
+            var sql = "select enumName, enumValueName, orderIndex from simple1c.enumMappings";
+            return database.ExecuteEnumerable(sql, new object[0], reader => new EnumMapping
+                {
+                    enumName = reader.GetString(0),
+                    enumValueName = reader.GetString(1),
+                    //doesn't work for some reason
+                    //orderIndex = reader.GetInt32(2)
+                })
+                .ToList();
+        }
+
+
         private TableMapping LoadMappingOrNull(string queryName)
         {
             const string sql = "select queryTableName,dbName,type,properties " +

@@ -75,6 +75,11 @@ namespace Simple1C.Tests.Sql
             {
                 return mappings.Select(c => c.Key).ToList();
             }
+
+            public List<EnumMapping> ListEnums()
+            {
+                return Enumerable.Empty<EnumMapping>().ToList();
+            }
         }
     }
 }
