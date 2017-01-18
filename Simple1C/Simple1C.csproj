@@ -284,7 +284,7 @@
     <PropertyGroup>
       <ILRepackCommand>"..\packages\ILRepack.2.0.11\tools\ILRepack.exe" /internalize /out:$(OutputPath)\$(AssemblyName).dll "@(IntermediateAssembly)" @(IlmergeAssemblies->'"%(FullPath)"', ' ')</ILRepackCommand>
     </PropertyGroup>
-    <Exec Condition = "'$(OS)' = 'Unix'" Command="mono $(ILRepackCommand)"/>
+    <Exec Condition = "'$(OS)' == 'Unix'" Command="mono $(ILRepackCommand)"/>
     <Exec Condition = "'$(OS)' != 'Unix'" Command="$(ILRepackCommand)"/>
     <Delete Files="@(ReferenceCopyLocalPaths->'$(OutDir)%(DestinationSubDirectory)%(Filename)%(Extension)')" />
   </Target>
